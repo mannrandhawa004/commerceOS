@@ -1,0 +1,11 @@
+{
+  "name": "commerce-os-server",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm --filter @commerce-os/api dev",
+    "build": "pnpm --filter @commerce-os/api build",
+    "start": "pnpm --filter @commerce-os/api start",
+    "typecheck": "pnpm --filter @commerce-os/api typecheck"
+  }
+}

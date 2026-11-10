@@ -1,0 +1,1 @@
+{ "name": "@commerce-os/worker", "private": true, "scripts": { "dev": "tsx watch src/index.ts", "build": "tsc", "lint": "eslint .", "typecheck": "tsc --noEmit" } }
