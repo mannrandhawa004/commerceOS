@@ -1,17 +1,24 @@
-import type { ErrorRequestHandler } from 'express';
-import { env } from '../config/env.js';
+import type {
+  Request,
+  Response,
+  NextFunction
+} from "express";
 
-export const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
-  console.error(error);
+import { logger } from "../config/app.config.js";
 
-  response.status(500).json({
-    error: {
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'An unexpected error occurred.',
-    },
+export function errorHandler(
+  error: Error,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+): void {
+  logger.error(error);
+
+  res.status(500).json({
+    success: false,
+    message:
+      process.env.NODE_ENV === "production"
+        ? "Internal server error"
+        : error.message
   });
-};
-
-
-
-
+}
