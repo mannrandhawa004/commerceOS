@@ -1,6 +1,9 @@
 import { Router } from "express";
+import openapiRoutes from "./openapi.js";
 
 const router = Router();
+
+router.use(openapiRoutes);
 
 router.get("/health", (_req, res) => {
   res.status(200).json({

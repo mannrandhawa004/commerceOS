@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
 
 import { env } from "./config/env.js";
 import { requestLogger } from "./middleware/request-logger.js";
@@ -23,6 +24,14 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use(requestLogger);
+
+app.use(
+  `${env.API_PREFIX}/docs`,
+  swaggerUi.serve,
+  swaggerUi.setup(undefined, {
+    swaggerOptions: { url: `${env.API_PREFIX}/openapi.json` }
+  })
+);
 
 app.use(env.API_PREFIX, apiRoutes);
 

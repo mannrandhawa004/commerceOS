@@ -9,7 +9,7 @@ const envSchema = z.object({
             .default("development"),
     PORT : z.coerce.number().default(5000),
 
-    API_PREFIX : z.string().default("api/v1"),
+    API_PREFIX : z.string().default("/api/v1"),
 
     MONGODB_URI : z.string().min(1),
 
