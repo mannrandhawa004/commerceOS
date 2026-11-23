@@ -1,17 +1,14 @@
-import app from "./app.js";
+import app from './app.js';
 
-import { env } from "./config/env.js";
-import { logger } from "./config/app.config.js";
+import { env } from './config/env.js';
+import { logger } from './config/app.config.js';
 
 import {
   connectDatabase,
-  disconnectDatabase
-} from "./infrastructure/database/mongoose.js";
+  disconnectDatabase,
+} from './infrastructure/database/mongoose.js';
 
-import {
-  connectRedis,
-  disconnectRedis
-} from "./infrastructure/redis/redis.js";
+import { connectRedis, disconnectRedis } from './infrastructure/redis/redis.js';
 
 async function startServer(): Promise<void> {
   try {
@@ -20,7 +17,7 @@ async function startServer(): Promise<void> {
 
     const server = app.listen(env.PORT, () => {
       logger.info(
-        `CommerceOS API running on port ${env.PORT}`
+        `CommerceOS API running on port ${env.PORT} (http://localhost:${env.PORT})`,
       );
     });
 
@@ -32,7 +29,7 @@ async function startServer(): Promise<void> {
           await disconnectRedis();
           await disconnectDatabase();
 
-          logger.info("Application shut down successfully");
+          logger.info('Application shut down successfully');
           process.exit(0);
         } catch (error) {
           logger.error(error);
@@ -41,10 +38,10 @@ async function startServer(): Promise<void> {
       });
     };
 
-    process.on("SIGTERM", () => void shutdown("SIGTERM"));
-    process.on("SIGINT", () => void shutdown("SIGINT"));
+    process.on('SIGTERM', () => void shutdown('SIGTERM'));
+    process.on('SIGINT', () => void shutdown('SIGINT'));
   } catch (error) {
-    logger.error(error, "Unable to start CommerceOS API");
+    logger.error(error, 'Unable to start CommerceOS API');
     process.exit(1);
   }
 }
