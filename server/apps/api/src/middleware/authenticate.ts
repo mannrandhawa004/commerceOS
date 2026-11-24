@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from "express";
-import jwt, { type JwtPayload } from "jsonwebtoken";
+import type { Request, Response, NextFunction } from "express";
+import { type JwtPayload } from "jsonwebtoken";
+import mongoose from "mongoose";
+import { verifyAccessToken } from "../shared/utils/tokenGenration.js";
 
 import { RefreshSession } from "../modules/auth/models/refresh-session.model.js";
 import { User } from "../modules/users/models/user.model.js";
 import { AppError } from "../shared/errors/app-error.js";
 import { asyncHandler } from "../shared/utils/async-handler.js";
-
-const ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET!;
 
 export const authenticate = asyncHandler(
   async (req: Request, _res: Response, next: NextFunction) => {
@@ -25,20 +25,10 @@ export const authenticate = asyncHandler(
     let decoded: JwtPayload;
 
     try {
-      const result = jwt.verify(token, ACCESS_TOKEN_SECRET, {
-        issuer: "commerce-os-api",
-        audience: "commerce-os-client",
-      });
-
-      if (
-        typeof result === "string" ||
-        typeof result.sub !== "string" ||
-        typeof result.sid !== "string"
-      ) {
-        throw new Error("Invalid token payload");
+      decoded = verifyAccessToken(token);
+      if (!mongoose.isValidObjectId(decoded.sub) || !mongoose.isValidObjectId(decoded.sid)) {
+        throw new Error("Invalid token identifiers");
       }
-
-      decoded = result;
     } catch {
       throw new AppError(
         "Invalid or expired access token",

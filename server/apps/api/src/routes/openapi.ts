@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { env } from "../config/env.js";
+import { authPaths, authSchemas } from "../modules/auth/openapi.js";
 
 const router = Router();
 
@@ -11,11 +12,16 @@ router.get("/openapi.json", (_req, res) => {
     info: {
       title: "CommerceOS API",
       version: "0.1.0",
-      description: "The currently implemented CommerceOS HTTP API. Business endpoints and authentication are not implemented yet."
+      description: "The currently implemented CommerceOS HTTP API, including authentication and session management."
     },
     servers: [{ url: env.API_PREFIX, description: "Configured API prefix on this server" }],
-    tags: [{ name: "Health", description: "Process health" }],
+    tags: [
+      { name: "Health", description: "Process health" },
+      { name: "Authentication", description: "Account registration, authentication and sessions" },
+      { name: "Documentation", description: "API documentation" }
+    ],
     paths: {
+      ...authPaths,
       "/openapi.json": {
         get: {
           tags: ["Documentation"],
@@ -45,7 +51,9 @@ router.get("/openapi.json", (_req, res) => {
       }
     },
     components: {
+      securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" } },
       schemas: {
+        ...authSchemas,
         HealthResponse: {
           type: "object",
           required: ["success", "message", "timestamp"],

@@ -13,6 +13,8 @@ const envSchema = z.object({
 
     MONGODB_URI : z.string().min(1),
 
+    JWT_ACCESS_SECRET: z.string().min(32),
+
     REDIS_HOST : z.string().default("localhost"),
 
     REDIS_PORT : z.coerce.number().default(6379),

@@ -1,5 +1,4 @@
 import bcrypt from 'bcryptjs';
-import { Jwt } from 'jsonwebtoken';
 import crypto from 'crypto';
 
 import { User } from '../../users/models/user.model.js';
@@ -8,6 +7,7 @@ import { RoleAssignment } from '../../role-assignments/models/role-assignment.mo
 import { RefreshSession } from '../models/refresh-session.model.js';
 
 import { AppError } from '../../../shared/errors/app-error.js';
+import { generateAccessToken } from '../../../shared/utils/tokenGenration.js';
 
 interface RegisterInput {
   firstName: string;
@@ -26,47 +26,17 @@ interface SessionMetadata {
   ipAddress?: string;
 }
 
-const ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET!;
-const ACCESS_TOKEN_EXPIRES_IN = "15m";
 const REFRESH_TOKEN_DAYS = 30;
 
-if (!ACCESS_TOKEN_SECRET || ACCESS_TOKEN_SECRET.length < 32) {
-  throw new Error("JWT_ACCESS_SECRET must be at least 32 characters");
-}
-
 const hashToken = (token: string) =>
-  crypto.createHash("sha256").update(token).digest("hex");
+  crypto.createHash('sha256').update(token).digest('hex');
+const generateRefreshToken = () => crypto.randomBytes(64).toString('hex');
 
-const generateRefreshToken = () =>
-  crypto.randomBytes(64).toString("hex"); 
-
-
-const generateAccessToken = (
-  userId: string,
-  sessionId: string
-) => {
-  return jwt.sign(
-    {
-      sub: userId,
-      sid: sessionId,
-    },
-    ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
-      issuer: "commerce-os-api",
-      audience: "commerce-os-client",
-    }
-  );
-};
-
-const createSession = async (
-  userId: string,
-  metadata: SessionMetadata
-) => {
+const createSession = async (userId: string, metadata: SessionMetadata) => {
   const refreshToken = generateRefreshToken();
 
   const expiresAt = new Date(
-    Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000
+    Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000,
   );
 
   const session = await RefreshSession.create({
@@ -77,10 +47,7 @@ const createSession = async (
     ipAddress: metadata.ipAddress,
   });
 
-  const accessToken = generateAccessToken(
-    userId,
-    session.id
-  );
+  const accessToken = generateAccessToken(userId, session.id);
 
   return {
     accessToken,
@@ -96,35 +63,38 @@ export class AuthService {
     });
 
     if (existingUser) {
+      throw new AppError('Email already registered', 409, 'DUPLICATE_RESOURCE');
+    }
+
+    const customerRole = await Role.findOne({
+      slug: 'customer',
+      isActive: true,
+    });
+    if (!customerRole) {
       throw new AppError(
-        "Email already registered",
-        409,
-        "DUPLICATE_RESOURCE"
+        'Customer role is not configured',
+        503,
+        'ROLE_NOT_CONFIGURED',
       );
     }
 
     const hashedPassword = await bcrypt.hash(input.password, 12);
-
     const user = await User.create({
       firstName: input.firstName,
       lastName: input.lastName,
       email: input.email,
       password: hashedPassword,
     });
-
-    // A new public registration receives only the customer role.
-    const customerRole = await Role.findOne({
-      slug: "customer",
-      isActive: true,
-    });
-
-    if (customerRole) {
+    try {
       await RoleAssignment.create({
         userId: user._id,
         roleId: customerRole._id,
-        scope: "global",
+        scope: 'global',
         storeIds: [],
       });
+    } catch (error) {
+      await User.deleteOne({ _id: user._id });
+      throw error;
     }
 
     return {
@@ -135,47 +105,34 @@ export class AuthService {
     };
   }
 
-  static async login(
-    input: LoginInput,
-    metadata: SessionMetadata
-  ) {
+  static async login(input: LoginInput, metadata: SessionMetadata) {
     const user = await User.findOne({
       email: input.email,
-    }).select("+password");
+    }).select('+password');
 
     if (!user) {
       throw new AppError(
-        "Invalid email or password",
+        'Invalid email or password',
         401,
-        "INVALID_CREDENTIALS"
+        'INVALID_CREDENTIALS',
       );
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      input.password,
-      user.password
-    );
+    const isPasswordValid = await bcrypt.compare(input.password, user.password);
 
     if (!isPasswordValid) {
       throw new AppError(
-        "Invalid email or password",
+        'Invalid email or password',
         401,
-        "INVALID_CREDENTIALS"
+        'INVALID_CREDENTIALS',
       );
     }
 
-    if (user.status !== "active") {
-      throw new AppError(
-        "Your account is not active",
-        403,
-        "ACCOUNT_INACTIVE"
-      );
+    if (user.status !== 'active') {
+      throw new AppError('Your account is not active', 403, 'ACCOUNT_INACTIVE');
     }
 
-    const tokens = await createSession(
-      user.id,
-      metadata
-    );
+    const tokens = await createSession(user.id, metadata);
 
     user.lastLoginAt = new Date();
     await user.save();
@@ -191,46 +148,39 @@ export class AuthService {
     };
   }
 
-  static async refresh(
-    oldRefreshToken: string,
-    metadata: SessionMetadata
-  ) {
+  static async refresh(oldRefreshToken: string, metadata: SessionMetadata) {
     const tokenHash = hashToken(oldRefreshToken);
 
     const session = await RefreshSession.findOne({
       tokenHash,
       revokedAt: null,
       expiresAt: { $gt: new Date() },
-    }).select("+tokenHash");
+    }).select('+tokenHash');
 
     if (!session) {
       throw new AppError(
-        "Invalid or expired refresh token",
+        'Invalid or expired refresh token',
         401,
-        "INVALID_REFRESH_TOKEN"
+        'INVALID_REFRESH_TOKEN',
       );
     }
 
     const user = await User.findById(session.userId);
 
-    if (!user || user.status !== "active") {
+    if (!user || user.status !== 'active') {
       await RefreshSession.updateOne(
         { _id: session._id },
-        { $set: { revokedAt: new Date() } }
+        { $set: { revokedAt: new Date() } },
       );
 
-      throw new AppError(
-        "User account is not active",
-        401,
-        "ACCOUNT_INACTIVE"
-      );
+      throw new AppError('User account is not active', 401, 'ACCOUNT_INACTIVE');
     }
 
     // Rotate the refresh token atomically.
     const newRefreshToken = generateRefreshToken();
 
     const newExpiresAt = new Date(
-      Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000
+      Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000,
     );
 
     const updatedSession = await RefreshSession.findOneAndUpdate(
@@ -248,22 +198,19 @@ export class AuthService {
           ipAddress: metadata.ipAddress,
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedSession) {
       throw new AppError(
-        "Refresh token has already been used",
+        'Refresh token has already been used',
         401,
-        "REFRESH_TOKEN_REUSED"
+        'REFRESH_TOKEN_REUSED',
       );
     }
 
     return {
-      accessToken: generateAccessToken(
-        user.id,
-        updatedSession.id
-      ),
+      accessToken: generateAccessToken(user.id, updatedSession.id),
       refreshToken: newRefreshToken,
       expiresAt: newExpiresAt,
     };
@@ -281,9 +228,9 @@ export class AuthService {
         $set: {
           revokedAt: new Date(),
         },
-      }
+      },
     );
 
-    return { message: "Logged out successfully" };
+    return { message: 'Logged out successfully' };
   }
 }
