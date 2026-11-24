@@ -7,7 +7,7 @@ export const registerSchema = z.object({
 
     email: z.string().trim().email().toLowerCase(),
 
-    password: z.string().min(8).max(72),
+    password: z.string().min(8).refine((value) => Buffer.byteLength(value, "utf8") <= 72, "Password must be at most 72 bytes"),
   }),
 });
 

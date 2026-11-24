@@ -1,5 +1,6 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 
+import { User } from "../../users/models/user.model.js";
 import { AuthService } from "../services/auth.service.js";
 import {
   sendSuccess,
@@ -12,8 +13,8 @@ export class AuthController {
 
     return sendCreated(
       res,
-      "Account created successfully",
-      user
+      user,
+      "Account created successfully"
     );
   }
 
@@ -28,8 +29,8 @@ export class AuthController {
 
     return sendSuccess(
       res,
-      "Login successful",
-      result
+      result,
+      "Login successful"
     );
   }
 
@@ -44,8 +45,8 @@ export class AuthController {
 
     return sendSuccess(
       res,
-      "Token refreshed successfully",
-      result
+      result,
+      "Token refreshed successfully"
     );
   }
 
@@ -56,22 +57,20 @@ export class AuthController {
 
     return sendSuccess(
       res,
-      result.message,
-      null
+      null,
+      result.message
     );
   }
 
   static async me(req: Request, res: Response) {
-    const { User } = await import("../../users/models/user.model");
-
     const user = await User.findById(req.auth?.userId).select(
       "-password"
     );
 
     return sendSuccess(
       res,
-      "User profile fetched successfully",
-      user
+      user,
+      "User profile fetched successfully"
     );
   }
 }

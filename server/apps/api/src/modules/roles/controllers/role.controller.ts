@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 
 import { Role } from "../models/role.model.js";
 import {
@@ -20,8 +20,8 @@ export class RoleController {
 
     return sendCreated(
       res,
-      "Role created successfully",
-      role
+      role,
+      "Role created successfully"
     );
   }
 
@@ -32,8 +32,8 @@ export class RoleController {
 
     return sendSuccess(
       res,
-      "Roles fetched successfully",
-      roles
+      roles,
+      "Roles fetched successfully"
     );
   }
 }

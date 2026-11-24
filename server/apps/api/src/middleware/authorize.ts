@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 
 import { RoleAssignment } from "../modules/role-assignments/models/role-assignment.model.js";
 import { Role } from "../modules/roles/models/role.model.js";
@@ -19,6 +19,7 @@ export const authorize = (requiredPermission: string) =>
 
       const assignments = await RoleAssignment.find({
         userId: req.auth.userId,
+        scope: "global",
       }).populate({
         path: "roleId",
         model: Role,

@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import type { ZodType } from "zod";
 
 export const validate =
@@ -11,7 +11,7 @@ export const validate =
     });
 
     if (!result.success) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: "Validation failed",
         error: {
@@ -19,9 +19,11 @@ export const validate =
           details: result.error.flatten(),
         },
       });
+      return;
     }
 
-    req.body = result.data.body ?? req.body;
+    const data = result.data as { body?: unknown };
+    req.body = data.body ?? req.body;
 
     next();
   };

@@ -9,7 +9,7 @@ import { notFoundHandler } from "./middleware/not-found.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import apiRoutes from "./routes/index.js";
 
-import { authRoutes } from "./modules/auth";
+import { authRoutes } from "./modules/auth/index.js";
 import roleRoutes from "./modules/roles/routes/role.routes.js";
 export const app = express();
 
@@ -37,7 +37,7 @@ app.use(
 
 app.use(env.API_PREFIX, apiRoutes);
 app.use(`${env.API_PREFIX}/auth`, authRoutes);
-app.use("/api/v1/roles", roleRoutes);
+app.use(`${env.API_PREFIX}/roles`, roleRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
