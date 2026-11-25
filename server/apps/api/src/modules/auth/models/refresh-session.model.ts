@@ -23,12 +23,12 @@ const refreshSessionSchema = new Schema<IRefreshSession>(
       type: String,
       required: true,
       select: false,
+      index: true,
     },
 
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
 
     revokedAt: {

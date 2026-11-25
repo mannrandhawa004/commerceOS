@@ -27,6 +27,8 @@ interface SessionMetadata {
 }
 
 const REFRESH_TOKEN_DAYS = 30;
+const refreshExpiresAt = () =>
+  new Date(Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000);
 
 const hashToken = (token: string) =>
   crypto.createHash('sha256').update(token).digest('hex');
@@ -35,9 +37,7 @@ const generateRefreshToken = () => crypto.randomBytes(64).toString('hex');
 const createSession = async (userId: string, metadata: SessionMetadata) => {
   const refreshToken = generateRefreshToken();
 
-  const expiresAt = new Date(
-    Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000,
-  );
+  const expiresAt = refreshExpiresAt();
 
   const session = await RefreshSession.create({
     userId,
@@ -58,14 +58,15 @@ const createSession = async (userId: string, metadata: SessionMetadata) => {
 
 export class AuthService {
   static async register(input: RegisterInput) {
-    const existingUser = await User.findOne({
+    const existingUser = await User.exists({
       email: input.email,
     });
 
     if (existingUser) {
       throw new AppError('Email already registered', 409, 'DUPLICATE_RESOURCE');
     }
-
+    
+    // It check for role is that role is active , so we can assign it to normal user 
     const customerRole = await Role.findOne({
       slug: 'customer',
       isActive: true,
@@ -85,6 +86,7 @@ export class AuthService {
       email: input.email,
       password: hashedPassword,
     });
+    
     try {
       await RoleAssignment.create({
         userId: user._id,
@@ -155,7 +157,7 @@ export class AuthService {
       tokenHash,
       revokedAt: null,
       expiresAt: { $gt: new Date() },
-    }).select('+tokenHash');
+    }).lean();
 
     if (!session) {
       throw new AppError(
@@ -165,7 +167,7 @@ export class AuthService {
       );
     }
 
-    const user = await User.findById(session.userId);
+    const user = await User.findById(session.userId).select('status').lean();
 
     if (!user || user.status !== 'active') {
       await RefreshSession.updateOne(
@@ -179,9 +181,7 @@ export class AuthService {
     // Rotate the refresh token atomically.
     const newRefreshToken = generateRefreshToken();
 
-    const newExpiresAt = new Date(
-      Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000,
-    );
+    const newExpiresAt = refreshExpiresAt();
 
     const updatedSession = await RefreshSession.findOneAndUpdate(
       {
@@ -210,7 +210,7 @@ export class AuthService {
     }
 
     return {
-      accessToken: generateAccessToken(user.id, updatedSession.id),
+      accessToken: generateAccessToken(user._id.toString(), updatedSession.id),
       refreshToken: newRefreshToken,
       expiresAt: newExpiresAt,
     };
