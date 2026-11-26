@@ -1,0 +1,16 @@
+import { Router } from "express";
+import { authenticate } from "../../../middleware/authenticate.js";
+import { requireSuperAdmin } from "../../../middleware/super-admin.js";
+import { validate } from "../../../middleware/validate.js";
+import { asyncHandler } from "../../../shared/utils/async-handler.js";
+import { idParams } from "../../../shared/utils/management-validation.js";
+import { StoreController as controller } from "../controllers/store.controller.js";
+import { createStore, updateStore, archiveStore } from "../validators/store.validator.js";
+const router = Router();
+router.use(authenticate, requireSuperAdmin);
+router.post("/", validate(createStore), asyncHandler(controller.create));
+router.get("/", asyncHandler(controller.list));
+router.get("/:id", validate(idParams), asyncHandler(controller.get));
+router.patch("/:id", validate(updateStore), asyncHandler(controller.update));
+router.post("/:id/archive", validate(archiveStore), asyncHandler(controller.archive));
+export default router;

@@ -58,6 +58,12 @@ roleAssignmentSchema.index({
   organizationId: 1,
 });
 
+// One assignment per employee, role, organization and scope. Store IDs are managed as a set.
+roleAssignmentSchema.index(
+  { userId: 1, roleId: 1, organizationId: 1, scope: 1 },
+  { unique: true, partialFilterExpression: { scope: { $in: ["organization", "store"] } } }
+);
+
 export const RoleAssignment: Model<IRoleAssignment> =
   mongoose.models.RoleAssignment ||
   mongoose.model<IRoleAssignment>(

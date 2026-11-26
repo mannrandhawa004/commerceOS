@@ -11,6 +11,9 @@ import apiRoutes from "./routes/index.js";
 
 import { authRoutes } from "./modules/auth/index.js";
 import roleRoutes from "./modules/roles/routes/role.routes.js";
+import { employeeRoutes } from "./modules/employees/index.js";
+import { organizationRoutes } from "./modules/organizations/index.js";
+import { storeRoutes } from "./modules/stores/index.js";
 export const app = express();
 
 app.use(helmet());
@@ -38,6 +41,9 @@ app.use(
 app.use(env.API_PREFIX, apiRoutes);
 app.use(`${env.API_PREFIX}/auth`, authRoutes);
 app.use(`${env.API_PREFIX}/roles`, roleRoutes);
+app.use(`${env.API_PREFIX}/employees`, employeeRoutes);
+app.use(`${env.API_PREFIX}/organizations`, organizationRoutes);
+app.use(`${env.API_PREFIX}/stores`, storeRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -45,4 +51,3 @@ app.use(errorHandler);
 export default app;
 
 
-// Next module: Employee Management + Role Assignment
