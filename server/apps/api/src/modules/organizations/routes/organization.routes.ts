@@ -1,0 +1,16 @@
+import { Router } from "express";
+import { authenticate } from "../../../middleware/authenticate.js";
+import { requireSuperAdmin } from "../../../middleware/super-admin.js";
+import { validate } from "../../../middleware/validate.js";
+import { asyncHandler } from "../../../shared/utils/async-handler.js";
+import { idParams } from "../../../shared/utils/management-validation.js";
+import { OrganizationController as controller } from "../controllers/organization.controller.js";
+import { createOrganization, updateOrganization, archiveOrganization } from "../validators/organization.validator.js";
+const router = Router();
+router.use(authenticate, requireSuperAdmin);
+router.post("/", validate(createOrganization), asyncHandler(controller.create));
+router.get("/", asyncHandler(controller.list));
+router.get("/:id", validate(idParams), asyncHandler(controller.get));
+router.patch("/:id", validate(updateOrganization), asyncHandler(controller.update));
+router.post("/:id/archive", validate(archiveOrganization), asyncHandler(controller.archive));
+export default router;

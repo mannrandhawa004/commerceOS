@@ -1,0 +1,17 @@
+import { Router } from "express";
+import { authenticate } from "../../../middleware/authenticate.js";
+import { requireSuperAdmin } from "../../../middleware/super-admin.js";
+import { validate } from "../../../middleware/validate.js";
+import { asyncHandler } from "../../../shared/utils/async-handler.js";
+import { idParams } from "../../../shared/utils/management-validation.js";
+import { EmployeeController as controller } from "../controllers/employee.controller.js";
+import { createEmployee, updateEmployee, assignRole, assignmentParams } from "../validators/employee.validator.js";
+const router = Router();
+router.use(authenticate, requireSuperAdmin);
+router.post("/", validate(createEmployee), asyncHandler(controller.create));
+router.get("/", asyncHandler(controller.list));
+router.get("/:id", validate(idParams), asyncHandler(controller.get));
+router.patch("/:id", validate(updateEmployee), asyncHandler(controller.update));
+router.post("/:id/assignments", validate(assignRole), asyncHandler(controller.assign));
+router.delete("/:id/assignments/:assignmentId", validate(assignmentParams), asyncHandler(controller.removeAssignment));
+export default router;

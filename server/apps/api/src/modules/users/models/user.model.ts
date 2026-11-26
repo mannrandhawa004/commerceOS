@@ -8,6 +8,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   status: UserStatus;
+  isEmployee: boolean;
   emailVerifiedAt?: Date | null;
   lastLoginAt?: Date | null;
   createdAt: Date;
@@ -48,6 +49,8 @@ const userSchema = new Schema<IUser>(
       enum: ["active", "inactive", "blocked"],
       default: "active",
     },
+
+    isEmployee: { type: Boolean, default: false },
 
     emailVerifiedAt: {
       type: Date,
