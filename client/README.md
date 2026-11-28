@@ -28,7 +28,9 @@ src/
 │   ├── error.tsx                # global error boundary
 │   ├── loading.tsx
 │   └── not-found.tsx
+├── components/ui/               # shadcn components (import as @/components/ui/*)
 ├── config/                      # validated env + app-wide constants
+├── lib/                         # shadcn helpers (cn via clsx + tailwind-merge)
 ├── proxy.ts                     # cheap cookie-presence guard for /dashboard
 ├── modules/                     # feature slices (one folder per domain)
 │   └── auth/
@@ -66,7 +68,21 @@ Component -> useAuth() -> thunk -> authClient (axios, /api/*) -> BFF route handl
   `store/hooks.ts` are the only way components touch the store.
 - **Errors:** non-2xx envelopes are converted to `AppError` by the axios interceptor; thunks
   store a safe message as `rejectValue`; forms surface it through `Alert`.
-- **Styling:** existing `app/globals.css` design system plus additive `shared/styles/utilities.css`.
+- **Styling:** Tailwind CSS v4 utilities (imported in `app/globals.css`) layered over the legacy
+  design-system CSS; additive rules live in `shared/styles/utilities.css`.
+
+## Styling and UI primitives (shadcn + Tailwind)
+
+- `components.json` defines the shadcn defaults: `src/components/ui` for components,
+  `src/lib/utils.ts` for `cn`, and `src/app/globals.css` for Tailwind v4 CSS.
+- Add a primitive with `pnpm dlx shadcn@latest add <name>`; generated files land in
+  `src/components/ui`. The `@/components/ui` alias is why this folder must exist: shadcn's
+  generated imports and registry updates assume it.
+- Use `lucide-react` for UI icons; keep inline SVG only for brand marks (Google/Apple/Windows).
+- See `AGENTS.md` for the required visual direction (editorial minimal, high contrast,
+  responsive + dark variants, subtle motion).
+- `src/components/ui/auth-section-1.tsx` is the reference implementation; preview it at
+  **http://localhost:3000/demo** via `src/app/demo/page.tsx`.
 
 ## Adding a feature
 

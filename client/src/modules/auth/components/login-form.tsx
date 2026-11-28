@@ -1,11 +1,11 @@
 'use client';
 
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { Alert, Button, InputField, PasswordField } from '@/shared/components/ui';
+import { AuthFormLayout, FormAlert, PasswordField, SubmitButton, TextField } from '@/components/ui';
 import { useZodForm } from '@/shared/hooks/use-zod-form';
 import { useAuth } from '../hooks/use-auth';
 import { loginSchema } from '../validators/auth.validator';
-import { AuthFormLayout } from './auth-form-layout';
 
 export function LoginForm() {
   const { login } = useAuth();
@@ -23,15 +23,19 @@ export function LoginForm() {
       footer={
         <>
           New to CommerceOS?{' '}
-          <Link href="/register">
-            Create an account <span>→</span>
+          <Link
+            href="/register"
+            className="font-medium text-black underline underline-offset-2 transition-colors hover:text-black/60 dark:text-white dark:hover:text-white/60"
+          >
+            Create an account
+            <ArrowRight className="ml-1 inline size-3 align-[-2px] 2xl:size-3.5" aria-hidden="true" />
           </Link>
         </>
       }
     >
-      <form className="auth-form" onSubmit={form.handleSubmit} noValidate>
-        <Alert>{form.formError}</Alert>
-        <InputField
+      <form className="space-y-4 2xl:space-y-5" onSubmit={form.handleSubmit} noValidate>
+        <FormAlert>{form.formError}</FormAlert>
+        <TextField
           label="Email address"
           type="email"
           placeholder="you@yourbusiness.com"
@@ -48,9 +52,9 @@ export function LoginForm() {
           error={form.errors.password}
           {...form.getFieldProps('password')}
         />
-        <Button type="submit" disabled={form.submitting} trailing="→">
+        <SubmitButton busy={form.submitting}>
           {form.submitting ? 'Signing in…' : 'Sign in to your workspace'}
-        </Button>
+        </SubmitButton>
       </form>
     </AuthFormLayout>
   );

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { Alert, Button, InputField, PasswordField } from '@/shared/components/ui';
+import { useState } from 'react';
+import { AuthFormLayout, FormAlert, PasswordField, SubmitButton, TextField } from '@/components/ui';
 import { useZodForm } from '@/shared/hooks/use-zod-form';
 import { useAuth } from '../hooks/use-auth';
 import { registerFormSchema } from '../validators/auth.validator';
-import { AuthFormLayout } from './auth-form-layout';
 
 export function RegisterForm() {
   const { register } = useAuth();
@@ -40,8 +40,12 @@ export function RegisterForm() {
         intro="Your account is ready. Sign in to get started with CommerceOS."
         footer={<span>Welcome to CommerceOS.</span>}
       >
-        <Link className="primary-button success-link" href="/login">
-          Continue to sign in <span>→</span>
+        <Link
+          className="mt-7 flex h-11 w-full items-center justify-center gap-2.5 rounded-[10px] border border-black/40 bg-black px-4 text-base font-medium text-white transition-colors hover:bg-black/85 dark:border-white/40 dark:bg-white dark:text-black dark:hover:bg-white/85 2xl:mt-9 2xl:h-12 2xl:gap-3 2xl:px-5 2xl:text-lg"
+          href="/login"
+        >
+          Continue to sign in
+          <ArrowRight className="size-4 shrink-0 2xl:size-5" aria-hidden="true" />
         </Link>
       </AuthFormLayout>
     );
@@ -55,16 +59,20 @@ export function RegisterForm() {
       footer={
         <>
           Already have an account?{' '}
-          <Link href="/login">
-            Sign in <span>→</span>
+          <Link
+            href="/login"
+            className="font-medium text-black underline underline-offset-2 transition-colors hover:text-black/60 dark:text-white dark:hover:text-white/60"
+          >
+            Sign in
+            <ArrowRight className="ml-1 inline size-3 align-[-2px] 2xl:size-3.5" aria-hidden="true" />
           </Link>
         </>
       }
     >
-      <form className="auth-form" onSubmit={form.handleSubmit} noValidate>
-        <Alert>{form.formError}</Alert>
-        <div className="field-row">
-          <InputField
+      <form className="space-y-4 2xl:space-y-5" onSubmit={form.handleSubmit} noValidate>
+        <FormAlert>{form.formError}</FormAlert>
+        <div className="grid gap-4 sm:grid-cols-2 2xl:gap-5">
+          <TextField
             label="First name"
             placeholder="Asha"
             autoComplete="given-name"
@@ -72,7 +80,7 @@ export function RegisterForm() {
             error={form.errors.firstName}
             {...form.getFieldProps('firstName')}
           />
-          <InputField
+          <TextField
             label="Last name"
             placeholder="Sharma"
             autoComplete="family-name"
@@ -81,7 +89,7 @@ export function RegisterForm() {
             {...form.getFieldProps('lastName')}
           />
         </div>
-        <InputField
+        <TextField
           label="Email address"
           type="email"
           placeholder="you@yourbusiness.com"
@@ -106,9 +114,9 @@ export function RegisterForm() {
           error={form.errors.confirmPassword}
           {...form.getFieldProps('confirmPassword')}
         />
-        <Button type="submit" disabled={form.submitting} trailing="→">
+        <SubmitButton busy={form.submitting}>
           {form.submitting ? 'Creating account…' : 'Create account'}
-        </Button>
+        </SubmitButton>
       </form>
     </AuthFormLayout>
   );
