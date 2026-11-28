@@ -1,2 +1,6 @@
-import { AuthShell } from '../../modules/auth/components/auth-shell';
-export default function AuthLayout({ children }: { children: React.ReactNode }) { return <AuthShell>{children}</AuthShell>; }
+import type { ReactNode } from 'react';
+import { AuthShell } from '@/shared/components/layout';
+
+export default function AuthLayout({ children }: { children: ReactNode }) {
+  return <AuthShell>{children}</AuthShell>;
+}

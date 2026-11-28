@@ -2,6 +2,8 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export type UserStatus = "active" | "inactive" | "blocked";
 
+
+// is empoyee need to remove 
 export interface IUser extends Document {
   firstName: string;
   lastName: string;
